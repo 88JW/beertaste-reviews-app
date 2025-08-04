@@ -1,0 +1,24 @@
+{
+  "name": "BeerTaste",
+  "short_name": "BeerTaste",
+  "description": "Aplikacja do oceniania i recenzowania piw",
+  "theme_color": "#FFD700",
+  "background_color": "#1E1E1E",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512", 
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+.App {
+  text-align: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.App-header {
+  background-color: #282c34;
+  padding: 20px;
+  color: white;
+}
+
+/* BeerTaste specific styles */
+.beer-card {
+  transition: transform 0.2s ease-in-out;
+}
+
+.beer-card:hover {
+  transform: translateY(-4px);
+}
+
+.rating-stars {
+  color: #FFD700;
+  font-size: 1.5rem;
+}
+
+.beer-photo {
+  border-radius: 12px;
+  max-width: 100%;
+  height: auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.review-form {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin: 16px 0;
+}
+
+.welcome-logo {
+  max-width: 200px;
+  margin: 20px auto;
+  display: block;
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+  .beer-card {
+    margin: 8px 0;
+  }
+  
+  .review-form {
+    padding: 16px;
+    margin: 8px;
+  }
+}
+
+/* PWA specific styles */
+@media (display-mode: standalone) {
+  .App {
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Loading animations */
+.loading-spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
