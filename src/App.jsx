@@ -26,8 +26,8 @@ import ProfilePage from './pages/ProfilePage';
 
 function App() {
   const [user, setUser] = useState(null);
-  const [isLoggedIn, setIsLoggedIn] = useState(null); // null = loading, false = not logged, true = logged
-  const [loading, setLoading] = useState(true);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // Zaczynamy z false zamiast null
+  const [loading, setLoading] = useState(false); // Nie ładujemy na starcie
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -53,26 +53,6 @@ function App() {
       console.error('Błąd wylogowania:', error);
     }
   };
-
-  // Show loading while checking auth state
-  if (loading) {
-    return (
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Container 
-          maxWidth="sm" 
-          sx={{ 
-            display: 'flex', 
-            justifyContent: 'center', 
-            alignItems: 'center', 
-            minHeight: '100vh' 
-          }}
-        >
-          <div>Ładowanie...</div>
-        </Container>
-      </ThemeProvider>
-    );
-  }
 
   return (
     <ThemeProvider theme={theme}>
