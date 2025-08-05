@@ -1,36 +1,21 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  Container, 
-  Paper, 
+  Box, 
   TextField, 
   Button, 
-  Typography, 
-  Box,
-  Alert,
-  IconButton,
-  InputAdornment
+  Typography 
 } from '@mui/material';
-import { 
-  Visibility, 
-  VisibilityOff,
-  Email as EmailIcon,
-  Lock as LockIcon,
-  Person as PersonIcon
-} from '@mui/icons-material';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../../firebase';
 
 function Register() {
   const [formData, setFormData] = useState({
-    displayName: '',
     email: '',
     password: '',
     confirmPassword: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -44,203 +29,392 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
     setError('');
 
-    // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Hasła nie są identyczne.');
+      setError('Hasła nie są identyczne');
+      setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
-      setError('Hasło musi mieć co najmniej 6 znaków.');
+      setError('Hasło musi mieć co najmniej 6 znaków');
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
-
     try {
-      // Create user
-      const userCredential = await createUserWithEmailAndPassword(
-        auth, 
-        formData.email, 
-        formData.password
-      );
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+      const user = userCredential.user;
 
-      // Update profile
-      await updateProfile(userCredential.user, {
-        displayName: formData.displayName
-      });
-
-      // Create user document in Firestore
-      await setDoc(doc(db, 'users', userCredential.user.uid), {
-        displayName: formData.displayName,
+      // Utworz profil użytkownika w Firestore
+      await setDoc(doc(db, 'users', user.uid), {
         email: formData.email,
-        beerDrank: 0,
-        reviewsCount: 0,
         createdAt: new Date(),
-        lastActive: new Date()
+        reviewsCount: 0
       });
 
       navigate('/');
     } catch (error) {
-      console.error('Błąd rejestracji:', error);
-      setError(getErrorMessage(error.code));
-    } finally {
-      setLoading(false);
+      setError('Błąd podczas rejestracji: ' + error.message);
     }
-  };
-
-  const getErrorMessage = (errorCode) => {
-    switch (errorCode) {
-      case 'auth/email-already-in-use':
-        return 'Ten adres email jest już używany.';
-      case 'auth/invalid-email':
-        return 'Nieprawidłowy format adresu email.';
-      case 'auth/weak-password':
-        return 'Hasło jest zbyt słabe.';
-      default:
-        return 'Wystąpił błąd podczas rejestracji. Spróbuj ponownie.';
-    }
+    setLoading(false);
   };
 
   return (
-    <Container maxWidth="sm" sx={{ py: 4 }}>
-      <Box textAlign="center" mb={3}>
-        <Typography variant="h4" component="h1" gutterBottom sx={{
-          background: 'linear-gradient(45deg, #FF6B35, #FFD700)',
-          backgroundClip: 'text',
-          WebkitBackgroundClip: 'text',
-          WebkitTextFillColor: 'transparent',
-        }}>
-          🍺 Dołącz do nas
+    <Box 
+      sx={{ 
+        position: 'relative',
+        display: 'flex',
+        minHeight: '100vh',
+        flexDirection: 'column',
+        backgroundColor: '#102310',
+        justifyContent: 'space-between',
+        overflow: 'hidden',
+        fontFamily: '"Space Grotesk", "Noto Sans", sans-serif'
+      }}
+    >
+      {/* Top Section */}
+      <Box>
+        {/* Title */}
+        <Typography 
+          variant="h2"
+          sx={{ 
+            color: 'white',
+            fontSize: '28px',
+            fontWeight: 700,
+            lineHeight: 1.2,
+            px: 2,
+            textAlign: 'center',
+            pb: 1.5,
+            pt: 2.5
+          }}
+        >
+          Join the Beer Community
         </Typography>
-        <Typography variant="body1" color="text.secondary">
-          Utwórz konto i zacznij oceniać piwa
-        </Typography>
-      </Box>
 
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 3 }}>
-            {error}
-          </Alert>
-        )}
-
+        {/* Form */}
         <Box component="form" onSubmit={handleSubmit}>
-          <TextField
-            fullWidth
-            label="Nazwa użytkownika"
-            name="displayName"
-            value={formData.displayName}
-            onChange={handleChange}
-            required
-            margin="normal"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <PersonIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
+          {/* Email Field */}
+          <Box sx={{ 
+            display: 'flex', 
+            maxWidth: '480px', 
+            flexWrap: 'wrap', 
+            alignItems: 'flex-end', 
+            gap: 2, 
+            px: 2, 
+            py: 1.5
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              minWidth: '160px', 
+              flex: 1
+            }}>
+              <Typography
+                sx={{
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  lineHeight: 'normal',
+                  pb: 1
+                }}
+              >
+                Email
+              </Typography>
+              <TextField
+                name="email"
+                placeholder="Enter your email"
+                type="email"
+                value={formData.email}
+                onChange={handleChange}
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    width: '100%',
+                    minWidth: 0,
+                    flex: 1,
+                    borderRadius: '12px',
+                    height: '56px',
+                    backgroundColor: '#183418',
+                    border: '1px solid #316831',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 400,
+                    lineHeight: 'normal',
+                    '& fieldset': {
+                      border: 'none'
+                    },
+                    '&:hover fieldset': {
+                      border: 'none'
+                    },
+                    '&.Mui-focused fieldset': {
+                      border: '1px solid #316831'
+                    },
+                    '& input': {
+                      padding: '15px',
+                      color: 'white',
+                      '&::placeholder': {
+                        color: '#90cb90',
+                        opacity: 1
+                      }
+                    }
+                  }
+                }}
+              />
+            </Box>
+          </Box>
 
-          <TextField
-            fullWidth
-            label="Email"
-            name="email"
-            type="email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            margin="normal"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <EmailIcon color="action" />
-                </InputAdornment>
-              ),
-            }}
-          />
+          {/* Password Field */}
+          <Box sx={{ 
+            display: 'flex', 
+            maxWidth: '480px', 
+            flexWrap: 'wrap', 
+            alignItems: 'flex-end', 
+            gap: 2, 
+            px: 2, 
+            py: 1.5
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              minWidth: '160px', 
+              flex: 1
+            }}>
+              <Typography
+                sx={{
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  lineHeight: 'normal',
+                  pb: 1
+                }}
+              >
+                Password
+              </Typography>
+              <TextField
+                name="password"
+                placeholder="Enter your password"
+                type="password"
+                value={formData.password}
+                onChange={handleChange}
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    width: '100%',
+                    minWidth: 0,
+                    flex: 1,
+                    borderRadius: '12px',
+                    height: '56px',
+                    backgroundColor: '#183418',
+                    border: '1px solid #316831',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 400,
+                    lineHeight: 'normal',
+                    '& fieldset': {
+                      border: 'none'
+                    },
+                    '&:hover fieldset': {
+                      border: 'none'
+                    },
+                    '&.Mui-focused fieldset': {
+                      border: '1px solid #316831'
+                    },
+                    '& input': {
+                      padding: '15px',
+                      color: 'white',
+                      '&::placeholder': {
+                        color: '#90cb90',
+                        opacity: 1
+                      }
+                    }
+                  }
+                }}
+              />
+            </Box>
+          </Box>
 
-          <TextField
-            fullWidth
-            label="Hasło"
-            name="password"
-            type={showPassword ? 'text' : 'password'}
-            value={formData.password}
-            onChange={handleChange}
-            required
-            margin="normal"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowPassword(!showPassword)}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
+          {/* Confirm Password Field */}
+          <Box sx={{ 
+            display: 'flex', 
+            maxWidth: '480px', 
+            flexWrap: 'wrap', 
+            alignItems: 'flex-end', 
+            gap: 2, 
+            px: 2, 
+            py: 1.5
+          }}>
+            <Box sx={{ 
+              display: 'flex', 
+              flexDirection: 'column', 
+              minWidth: '160px', 
+              flex: 1
+            }}>
+              <Typography
+                sx={{
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 500,
+                  lineHeight: 'normal',
+                  pb: 1
+                }}
+              >
+                Confirm Password
+              </Typography>
+              <TextField
+                name="confirmPassword"
+                placeholder="Confirm your password"
+                type="password"
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                required
+                sx={{
+                  '& .MuiOutlinedInput-root': {
+                    width: '100%',
+                    minWidth: 0,
+                    flex: 1,
+                    borderRadius: '12px',
+                    height: '56px',
+                    backgroundColor: '#183418',
+                    border: '1px solid #316831',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 400,
+                    lineHeight: 'normal',
+                    '& fieldset': {
+                      border: 'none'
+                    },
+                    '&:hover fieldset': {
+                      border: 'none'
+                    },
+                    '&.Mui-focused fieldset': {
+                      border: '1px solid #316831'
+                    },
+                    '& input': {
+                      padding: '15px',
+                      color: 'white',
+                      '&::placeholder': {
+                        color: '#90cb90',
+                        opacity: 1
+                      }
+                    }
+                  }
+                }}
+              />
+            </Box>
+          </Box>
 
-          <TextField
-            fullWidth
-            label="Potwierdź hasło"
-            name="confirmPassword"
-            type={showConfirmPassword ? 'text' : 'password'}
-            value={formData.confirmPassword}
-            onChange={handleChange}
-            required
-            margin="normal"
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <LockIcon color="action" />
-                </InputAdornment>
-              ),
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    edge="end"
-                  >
-                    {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
-            }}
-          />
+          {/* Sign Up Button */}
+          <Box sx={{ display: 'flex', px: 2, py: 1.5 }}>
+            <Button
+              type="submit"
+              disabled={loading}
+              sx={{
+                minWidth: '84px',
+                maxWidth: '480px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                borderRadius: '12px',
+                height: '48px',
+                px: 2.5,
+                flex: 1,
+                backgroundColor: '#3ef43e',
+                color: '#102310',
+                fontSize: '16px',
+                fontWeight: 700,
+                lineHeight: 'normal',
+                letterSpacing: '0.015em',
+                textTransform: 'none',
+                '&:hover': {
+                  backgroundColor: '#35d935'
+                },
+                '&:disabled': {
+                  backgroundColor: '#2d5e2d',
+                  color: '#90cb90'
+                }
+              }}
+            >
+              {loading ? 'Rejestracja...' : 'Sign Up'}
+            </Button>
+          </Box>
 
-          <Button
-            type="submit"
-            fullWidth
-            variant="contained"
-            size="large"
-            disabled={loading}
-            sx={{ mt: 3, mb: 2, py: 1.5 }}
+          {/* Login Link */}
+          <Typography
+            component={Link}
+            to="/login"
+            sx={{
+              color: '#90cb90',
+              fontSize: '14px',
+              fontWeight: 400,
+              lineHeight: 'normal',
+              pb: 1.5,
+              pt: 0.5,
+              px: 2,
+              textAlign: 'center',
+              textDecoration: 'underline',
+              display: 'block',
+              '&:hover': {
+                color: '#7bb87b'
+              }
+            }}
           >
-            {loading ? 'Tworzenie konta...' : 'Zarejestruj się'}
-          </Button>
-        </Box>
-      </Paper>
+            Already have an account? Log In
+          </Typography>
 
-      <Box textAlign="center" mt={3}>
-        <Typography variant="body2" color="text.secondary">
-          Masz już konto?{' '}
-          <Button component={Link} to="/login" color="primary">
-            Zaloguj się
-          </Button>
-        </Typography>
+          {/* Error Message */}
+          {error && (
+            <Typography
+              sx={{
+                color: '#ff4444',
+                fontSize: '14px',
+                fontWeight: 400,
+                px: 2,
+                textAlign: 'center',
+                pb: 1
+              }}
+            >
+              {error}
+            </Typography>
+          )}
+        </Box>
       </Box>
-    </Container>
+
+      {/* Bottom Section with Decorative Images */}
+      <Box>
+        {/* Dark theme image */}
+        <Box
+          sx={{
+            width: '100%',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '390 / 320',
+            borderRadius: 0,
+            backgroundImage: 'url("/dark.svg")',
+            display: { xs: 'block', md: 'none' } // Show only on mobile
+          }}
+        />
+        
+        {/* Light theme image (hidden in dark mode) */}
+        <Box
+          sx={{
+            width: '100%',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat',
+            aspectRatio: '390 / 320',
+            borderRadius: 0,
+            backgroundImage: 'url("/light.svg")',
+            display: 'none' // Hidden since we're in dark mode
+          }}
+        />
+      </Box>
+    </Box>
   );
 }
 
