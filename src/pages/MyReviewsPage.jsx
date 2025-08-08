@@ -1,349 +1,367 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { 
-  Container, 
-  Typography, 
-  Box, 
-  Grid,
-  Card,
-  CardContent,
-  CardMedia,
-  Rating,
-  IconButton,
-  Chip,
-  Button,
-  CircularProgress,
-  Alert,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Stack
-} from '@mui/material';
-import { 
-  ArrowBack as ArrowBackIcon,
-  Edit as EditIcon,
-  Delete as DeleteIcon,
-  Add as AddIcon,
-  Sort as SortIcon
-} from '@mui/icons-material';
 
 function MyReviewsPage() {
   const navigate = useNavigate();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [user, setUser] = useState(null);
-  const [error, setError] = useState(null);
-  const [sortOrder, setSortOrder] = useState('newest'); // newest, oldest, highest, lowest
+  const [sortBy, setSortBy] = useState('date');
+  const [filterBy, setFilterBy] = useState('all');
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (user) {
-      getReviews();
+  // Sample data for demonstration - replace with real Firebase data
+  const sampleReviews = [
+    {
+      id: '1',
+      beerName: 'Cosmic Dust',
+      brewery: 'Stellar Brewing Co.',
+      style: 'IPA',
+      rating: 4.5,
+      photoUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBJsWVr6itYlNpYtxVvOLcz_9719UpHx1A4g-TBWTrd7lRvA3E1ru38KMXZTHLBPai1Q7yf1prGdNEmcm18xw0-wcouK9xqmD5x5yFGcjgLIk2jAQd236xCIedwMusw0JlIv6U_LFLvx7Rw5bIRr2N-1Rt4zytgryRZV2ADlEoGc3SBDhYp59-wAmmgWLK1FI53Ex3A2JiAvEVqcR__JBpZoPkqpMLmEmb3ifA3FI-jrSIMTMotFbbR8_EbW71C6wvNdXZG9HxS3Lzz',
+      date: '2024-01-15'
+    },
+    {
+      id: '2', 
+      beerName: 'Midnight Brew',
+      brewery: 'Lunar Craft Beers',
+      style: 'Stout',
+      rating: 4.2,
+      photoUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDEELs7FSxSZ2VH_a8X_skpoOGoqcylRhYLAk1_plpssaMzb5ytsLaFOHEO-bJ_VfITlal4aufcxlS3Z7dNyT5XTwiUJogr2EykubQws12GERdEwnpdNgiNfjMtqAyN8ryf-e9kC8Gh2mljm70rU0wItMflO7bwtcLh8Uoh70OT031HCPGpHVwRJVAoTwaw3nuPD2wetp1m9TXnEtHz_N0R0om_CZcsQTeHKx1M39DPSwLQHDi0tyADhrpig_D3zU3IzyIZFij0TPwd',
+      date: '2024-01-10'
+    },
+    {
+      id: '3',
+      beerName: 'Amber Horizon', 
+      brewery: 'Solaris Ales',
+      style: 'Amber Ale',
+      rating: 4.0,
+      photoUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuCYo1HlEtLcqrOrM4rBYkRihnhLLFarOsiL_Mn2D23NWVs8vTNIPD7iog8ItrZdNkM19kwYVKtUsd2qw74UeKlme3Ie-x-ySebNQ-4v_gtkStonZJvV_fllctxjEXEHyexUIuznHzuC9Vx8zLh2IOfhjpuY9mM0-eqiZ9KMFRXSMTLQNp3znZ5gr26-yMqYLy0olJNhmX7Cs6zBg5S2MOQAz3GhwegS_fiJhUx7RexB4W6H6HdoygQAsVXZdTl_FVUNAZtYdFbZpMKN',
+      date: '2024-01-08'
+    },
+    {
+      id: '4',
+      beerName: 'Nebula Nectar',
+      brewery: 'Galaxy Brews', 
+      style: 'Pale Ale',
+      rating: 3.8,
+      photoUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD-hb0H1QMPNCo38i3bYhb8jIQhlH71u27oLGKqU1rK9Nf7gLKH12-VUpj0jZ6UCRU-XJOnf3Xpg_GrGYXJlH8RoQ8rJdyrMgEvy2TOvAZwPx_fTyO-q5iFBwg1X5fx3d36xhd2PKs_UGGOIoT6_3AcNbwsqlWpx_4m4qVPp6b9CEyAN4A1LeMTOcv3zc6CdUe7vEPwV_F8DDpJxmLz_Px0a3t0BsqmmVE6Pz7hAtbIiWqc84tIIMghpTfUPxIPEXZw-Qgac7cario8',
+      date: '2024-01-05'
     }
-  }, [user]);
+  ];
 
-  const getReviews = async () => {
-    if (!user) {
-      setError("Użytkownik nie jest zalogowany.");
-      setLoading(false);
-      return;
-    }
-    
-    setError(null);
-    setLoading(true);
-    
-    const reviewsRef = collection(db, "reviews");
-    const q = query(reviewsRef, where("userId", "==", user.uid));
-    
+  // Function to fetch reviews from Firebase
+  const fetchReviews = async (userId) => {
     try {
-      const querySnapshot = await getDocs(q);
-      const fetchedReviews = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        photoUrl: doc.data().photoUrl || null,
-      }));
+      setLoading(true);
+      setError('');
       
-      console.log("Pobrane recenzje:", fetchedReviews);
-      console.log(`Użytkownik ${user.email} ma ${fetchedReviews.length} recenzji`);
+      const reviewsQuery = query(
+        collection(db, 'reviews'),
+        where('userId', '==', userId)
+      );
       
-      // Debug: sprawdźmy strukturę pierwszej recenzji
-      if (fetchedReviews.length > 0) {
-        console.log("Przykładowa recenzja:", fetchedReviews[0]);
-        console.log("Dostępne pola daty:", {
-          createdAt: fetchedReviews[0].createdAt,
-          tastingDate: fetchedReviews[0].tastingDate,
-          date: fetchedReviews[0].date,
-          timestamp: fetchedReviews[0].timestamp
+      const querySnapshot = await getDocs(reviewsQuery);
+      const fetchedReviews = [];
+      
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        fetchedReviews.push({
+          id: doc.id,
+          beerName: data.beerName || '',
+          brewery: data.brewery || '',
+          style: data.style || '',
+          rating: data.overallRating || data.overall || data.rating || 0, // Use overallRating first
+          photoUrl: data.photoUrl || null,
+          date: data.createdAt ? data.createdAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+          // Complete review data
+          tastingDate: data.tastingDate || '',
+          aromaIntensity: data.aromaIntensity || 0,
+          aromaQuality: data.aromaQuality || 0,
+          aromaNotesText: data.aromaNotesText || '',
+          color: data.color || '',
+          clarity: data.clarity || 0,
+          foam: data.foam || 0,
+          tasteIntensity: data.tasteIntensity || 0,
+          tasteBalance: data.tasteBalance || 0,
+          bitterness: data.bitterness || 0,
+          sweetness: data.sweetness || 0,
+          acidity: data.acidity || 0,
+          tasteNotes: data.tasteNotes || '',
+          drinkability: data.drinkability || 0,
+          complexity: data.complexity || 0,
+          overallRating: data.overallRating || 0,
+          comments: data.comments || '',
+          selectedIcon: data.selectedIcon || null,
+          userId: data.userId,
+          createdAt: data.createdAt
         });
-      }
+      });
       
       setReviews(fetchedReviews);
-    } catch (err) {
-      setError("Wystąpił błąd podczas pobierania recenzji.");
-      console.error("Błąd pobierania recenzji:", err);
+      
+      // If no reviews found, show a message but don't show sample data
+      if (fetchedReviews.length === 0) {
+        console.log('No reviews found for user:', userId);
+      }
+      
+    } catch (error) {
+      console.error('Error fetching reviews:', error);
+      setError('Błąd podczas pobierania recenzji: ' + error.message);
+      // If there's an error, show sample data as fallback
+      setReviews(sampleReviews);
     } finally {
       setLoading(false);
     }
   };
 
-  const sortReviews = (reviewsArray, order) => {
-    const sorted = [...reviewsArray];
-    
-    console.log("Sortowanie:", order, "Liczba recenzji:", sorted.length);
-    
-    switch (order) {
-      case 'newest':
-        return sorted.sort((a, b) => {
-          // Używamy timestamp (Firebase) lub tastingDate jako fallback
-          const dateA = a.timestamp?.toDate?.() || new Date(a.tastingDate) || new Date(0);
-          const dateB = b.timestamp?.toDate?.() || new Date(b.tastingDate) || new Date(0);
-          
-          console.log("Porównanie dat:", {
-            a: a.beerName || a.name,
-            timestampA: a.timestamp,
-            tastingDateA: a.tastingDate,
-            finalDateA: dateA.toISOString(),
-            b: b.beerName || b.name, 
-            timestampB: b.timestamp,
-            tastingDateB: b.tastingDate,
-            finalDateB: dateB.toISOString()
-          });
-          return dateB - dateA;
-        });
-      case 'oldest':
-        return sorted.sort((a, b) => {
-          const dateA = a.timestamp?.toDate?.() || new Date(a.tastingDate) || new Date(0);
-          const dateB = b.timestamp?.toDate?.() || new Date(b.tastingDate) || new Date(0);
-          return dateA - dateB;
-        });
-      case 'highest':
-        return sorted.sort((a, b) => {
-          console.log("Porównanie ocen:", {
-            a: a.beerName || a.name,
-            ocenaA: a.overall,
-            b: b.beerName || b.name,
-            ocenaB: b.overall
-          });
-          return (b.overall || 0) - (a.overall || 0);
-        });
-      case 'lowest':
-        return sorted.sort((a, b) => (a.overall || 0) - (b.overall || 0));
-      default:
-        return sorted;
-    }
-  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        fetchReviews(currentUser.uid);
+      } else {
+        navigate('/login');
+      }
+    });
 
-  const sortedReviews = sortReviews(reviews, sortOrder);
+    return () => unsubscribe();
+  }, [navigate]);
 
-  const handleEdit = (reviewId) => {
-    navigate(`/edit-review/${reviewId}`);
-  };
-
-  const handleDelete = (reviewId) => {
-    if (window.confirm('Czy na pewno chcesz usunąć tę recenzję?')) {
-      // TODO: Delete from Firebase
-      setReviews(reviews.filter(review => review.id !== reviewId));
-    }
-  };
-
-  const handleViewDetails = (reviewId) => {
+  const handleReviewClick = (reviewId) => {
     navigate(`/review/${reviewId}`);
   };
 
+  const filteredAndSortedReviews = reviews
+    .filter(review => {
+      if (filterBy === 'all') return true;
+      if (filterBy === 'favorites') return review.overallRating >= 7;
+      if (filterBy === 'wishlist') return review.overallRating < 7;
+      return true;
+    })
+    .sort((a, b) => {
+      switch (sortBy) {
+        case 'rating':
+          return (b.overallRating || 0) - (a.overallRating || 0);
+        case 'name':
+          return a.beerName.localeCompare(b.beerName);
+        case 'date':
+          return new Date(b.createdAt?.toDate() || b.date) - new Date(a.createdAt?.toDate() || a.date);
+        case 'style':
+          return a.style.localeCompare(b.style);
+        default:
+          return 0;
+      }
+    });
+
   if (loading) {
     return (
-      <Container maxWidth="md" sx={{ py: 4, textAlign: 'center' }}>
-        <CircularProgress />
-        <Typography sx={{ mt: 2 }}>Ładowanie recenzji...</Typography>
-      </Container>
-    );
-  }
-
-  if (error) {
-    return (
-      <Container maxWidth="md" sx={{ py: 4 }}>
-        <Alert severity="error" sx={{ mb: 2 }}>
-          {error}
-        </Alert>
-        <Button variant="contained" onClick={() => navigate('/')}>
-          Powrót do głównej
-        </Button>
-      </Container>
+      <div className="relative flex size-full min-h-screen flex-col bg-[#102310] justify-center items-center">
+        <div className="text-white">Loading...</div>
+      </div>
     );
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 2 }}>
-      <Box display="flex" alignItems="center" justifyContent="space-between" mb={3}>
-        <Box display="flex" alignItems="center">
-          <IconButton onClick={() => navigate('/')} sx={{ mr: 1 }}>
-            <ArrowBackIcon />
-          </IconButton>
-          <Typography variant="h5" component="h1">
-            Moje recenzje ({reviews.length})
-          </Typography>
-        </Box>
-        <Button 
-          variant="contained" 
-          startIcon={<AddIcon />}
-          onClick={() => navigate('/add-review')}
-        >
-          Dodaj nową
-        </Button>
-      </Box>
+    <div
+      className="relative flex size-full min-h-screen flex-col bg-[#102310] dark justify-between group/design-root overflow-x-hidden"
+      style={{ fontFamily: '"Space Grotesk", "Noto Sans", sans-serif' }}
+    >
+      <div>
+        {/* Header */}
+        <div className="flex items-center bg-[#102310] p-4 pb-2 justify-between">
+          <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pl-12">
+            Brewery
+          </h2>
+          <div className="flex w-12 items-center justify-end">
+            <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 bg-transparent text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0">
+              <div className="text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                  <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
+                </svg>
+              </div>
+            </button>
+          </div>
+        </div>
 
-      {/* Sortowanie */}
-      {reviews.length > 0 && (
-        <Box mb={3}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
-            <FormControl size="small" sx={{ minWidth: 200 }}>
-              <InputLabel>Sortuj według</InputLabel>
-              <Select
-                value={sortOrder}
-                label="Sortuj według"
-                onChange={(e) => setSortOrder(e.target.value)}
-                startAdornment={<SortIcon sx={{ mr: 1, color: 'text.secondary' }} />}
-              >
-                <MenuItem value="newest">Najnowsze</MenuItem>
-                <MenuItem value="oldest">Najstarsze</MenuItem>
-                <MenuItem value="highest">Najwyższa ocena</MenuItem>
-                <MenuItem value="lowest">Najniższa ocena</MenuItem>
-              </Select>
-            </FormControl>
-            <Typography variant="body2" color="text.secondary">
-              {sortedReviews.length} {sortedReviews.length === 1 ? 'recenzja' : 
-               sortedReviews.length < 5 ? 'recenzje' : 'recenzji'}
-            </Typography>
-          </Stack>
-        </Box>
-      )}
-
-      {reviews.length === 0 ? (
-        <Box textAlign="center" py={8}>
-          <Typography variant="h6" color="text.secondary" gutterBottom>
-            Nie masz jeszcze żadnych recenzji
-          </Typography>
-          <Typography variant="body2" color="text.secondary" gutterBottom>
-            Dodaj swoją pierwszą recenzję piwa!
-          </Typography>
-          <Button 
-            variant="contained" 
-            size="large"
-            startIcon={<AddIcon />}
-            onClick={() => navigate('/add-review')}
-            sx={{ mt: 2 }}
+        {/* Filter Tabs */}
+        <div className="flex gap-3 p-3 overflow-x-hidden">
+          <button
+            onClick={() => setFilterBy('all')}
+            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl pl-4 pr-4 ${
+              filterBy === 'all' ? 'bg-[#3ef43e] text-[#102310]' : 'bg-[#224922] text-white'
+            }`}
           >
-            Dodaj recenzję
-          </Button>
-        </Box>
-      ) : (
-        <Grid container spacing={3}>
-          {sortedReviews.map((review) => (
-            <Grid item xs={12} sm={6} md={4} key={review.id}>
-              <Card 
-                sx={{ 
-                  height: '100%', 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  cursor: 'pointer',
-                  '&:hover': {
-                    transform: 'translateY(-4px)',
-                    transition: 'transform 0.2s ease-in-out'
-                  }
-                }}
-                onClick={() => handleViewDetails(review.id)}
+            <p className="text-sm font-medium leading-normal">All</p>
+          </button>
+          <button
+            onClick={() => setFilterBy('favorites')}
+            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl pl-4 pr-4 ${
+              filterBy === 'favorites' ? 'bg-[#3ef43e] text-[#102310]' : 'bg-[#224922] text-white'
+            }`}
+          >
+            <p className="text-sm font-medium leading-normal">Favorites</p>
+          </button>
+          <button
+            onClick={() => setFilterBy('wishlist')}
+            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl pl-4 pr-4 ${
+              filterBy === 'wishlist' ? 'bg-[#3ef43e] text-[#102310]' : 'bg-[#224922] text-white'
+            }`}
+          >
+            <p className="text-sm font-medium leading-normal">Wishlist</p>
+          </button>
+        </div>
+
+        {/* Sort Section */}
+        <h3 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Sort by</h3>
+        <div className="flex gap-3 p-3 flex-wrap pr-4">
+          <button
+            onClick={() => setSortBy('rating')}
+            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl pl-4 pr-4 ${
+              sortBy === 'rating' ? 'bg-[#3ef43e] text-[#102310]' : 'bg-[#224922] text-white'
+            }`}
+          >
+            <p className="text-sm font-medium leading-normal">Rating</p>
+          </button>
+          <button
+            onClick={() => setSortBy('name')}
+            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl pl-4 pr-4 ${
+              sortBy === 'name' ? 'bg-[#3ef43e] text-[#102310]' : 'bg-[#224922] text-white'
+            }`}
+          >
+            <p className="text-sm font-medium leading-normal">Name</p>
+          </button>
+          <button
+            onClick={() => setSortBy('date')}
+            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl pl-4 pr-4 ${
+              sortBy === 'date' ? 'bg-[#3ef43e] text-[#102310]' : 'bg-[#224922] text-white'
+            }`}
+          >
+            <p className="text-sm font-medium leading-normal">Date</p>
+          </button>
+          <button
+            onClick={() => setSortBy('style')}
+            className={`flex h-8 shrink-0 items-center justify-center gap-x-2 rounded-xl pl-4 pr-4 ${
+              sortBy === 'style' ? 'bg-[#3ef43e] text-[#102310]' : 'bg-[#224922] text-white'
+            }`}
+          >
+            <p className="text-sm font-medium leading-normal">Style</p>
+          </button>
+        </div>
+
+        {/* Reviews List */}
+        {error && (
+          <div className="p-4">
+            <div className="bg-red-900/50 border border-red-700 rounded-lg p-4">
+              <p className="text-red-200 text-sm">{error}</p>
+            </div>
+          </div>
+        )}
+        
+        {filteredAndSortedReviews.length === 0 && !loading && !error ? (
+          <div className="p-4">
+            <div className="bg-[#183418] border border-[#316831] rounded-lg p-6 text-center">
+              <div className="text-[#90cb90] mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48px" height="48px" fill="currentColor" viewBox="0 0 256 256" className="mx-auto">
+                  <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
+                </svg>
+              </div>
+              <h3 className="text-white text-lg font-bold mb-2">Brak recenzji</h3>
+              <p className="text-[#90cb90] text-sm mb-4">
+                Nie masz jeszcze żadnych recenzji piw. Dodaj swoją pierwszą recenzję!
+              </p>
+              <Link 
+                to="/add-review"
+                className="inline-flex items-center gap-2 bg-[#3ef43e] text-[#102310] px-4 py-2 rounded-lg font-medium hover:bg-[#90cb90] transition-colors"
               >
-                {review.photoUrl && (
-                  <CardMedia
-                    component="img"
-                    height="200"
-                    image={review.photoUrl}
-                    alt={review.beerName}
-                  />
-                )}
-                <CardContent sx={{ flexGrow: 1 }}>
-                  <Typography variant="h6" component="h2" gutterBottom noWrap>
-                    {review.beerName}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    {review.brewery}
-                  </Typography>
-                  <Chip 
-                    label={review.style} 
-                    size="small" 
-                    variant="outlined"
-                    sx={{ mb: 2 }}
-                  />
-                  <Box display="flex" alignItems="center" mb={1}>
-                    <Rating value={review.overall} readOnly size="small" />
-                    <Typography variant="body2" sx={{ ml: 1 }}>
-                      ({review.overall}/5)
-                    </Typography>
-                  </Box>
-                  <Typography 
-                    variant="body2" 
-                    color="text.secondary"
-                    sx={{ 
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical',
-                    }}
-                  >
-                    {review.notes}
-                  </Typography>
-                </CardContent>
-                <Box display="flex" justifyContent="space-between" p={1}>
-                  <Typography variant="caption" color="text.secondary">
-                    {(() => {
-                      // Używamy timestamp (Firebase) lub tastingDate jako fallback
-                      const date = review.timestamp?.toDate?.() || new Date(review.tastingDate);
-                      return date.toLocaleDateString('pl-PL', {
-                        year: 'numeric',
-                        month: 'short',
-                        day: 'numeric'
-                      });
-                    })()}
-                  </Typography>
-                  <Box>
-                    <IconButton 
-                      size="small" 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleEdit(review.id);
-                      }}
-                    >
-                      <EditIcon fontSize="small" />
-                    </IconButton>
-                    <IconButton 
-                      size="small" 
-                      color="error"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(review.id);
-                      }}
-                    >
-                      <DeleteIcon fontSize="small" />
-                    </IconButton>
-                  </Box>
-                </Box>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-    </Container>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16px" height="16px" fill="currentColor" viewBox="0 0 256 256">
+                  <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
+                </svg>
+                Dodaj recenzję
+              </Link>
+            </div>
+          </div>
+        ) : (
+          filteredAndSortedReviews.map((review) => (
+            <div key={review.id} className="p-4">
+              <div 
+                className="flex items-stretch justify-between gap-4 rounded-xl cursor-pointer hover:bg-[#183418] transition-colors p-2 -m-2"
+                onClick={() => handleReviewClick(review.id)}
+              >
+                <div className="flex flex-col gap-2 flex-[2_2_0px]">
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                      {review.selectedIcon === 'heart' ? '❤️' : 
+                       review.selectedIcon === 'star' ? '⭐' : 
+                       review.selectedIcon === 'thumbUp' ? '😊' : 
+                       review.selectedIcon === 'thumbDown' ? '😞' : '🍺'}
+                    </span>
+                    <span className="text-[#90cb90] text-lg font-bold">{review.overallRating || 'N/A'}/10</span>
+                  </div>
+                  <p className="text-white text-base font-bold leading-tight">{review.beerName}</p>
+                  <p className="text-[#90cb90] text-sm font-normal leading-normal">
+                    {review.brewery} · {review.style}
+                  </p>
+                  <div className="flex items-center gap-2 text-xs text-[#90cb90]">
+                    <span>Smak: {review.tasteBalance || 'N/A'}/10</span>
+                    <span>•</span>
+                    <span>Aromat: {review.aromaIntensity || 'N/A'}/10</span>
+                  </div>
+                </div>
+                <div
+                  className="w-full bg-center bg-no-repeat aspect-video bg-cover rounded-xl flex-1"
+                  style={{ 
+                    backgroundImage: review.photoUrl ? `url("${review.photoUrl}")` : `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23224922'/%3E%3Ctext x='50' y='55' text-anchor='middle' fill='%2390cb90' font-size='12' font-family='Arial'%3EBrak zdjęcia%3C/text%3E%3C/svg%3E")`
+                  }}
+                ></div>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Bottom Navigation */}
+      <div>
+        <div className="flex gap-2 border-t border-[#224922] bg-[#183418] px-4 pb-3 pt-2">
+          <Link to="/" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#90cb90]">
+            <div className="text-[#90cb90] flex h-8 items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z" />
+              </svg>
+            </div>
+            <p className="text-[#90cb90] text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+          </Link>
+          <Link to="/my-reviews" className="flex flex-1 flex-col items-center justify-end gap-1 text-white">
+            <div className="text-white flex h-8 items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z" />
+              </svg>
+            </div>
+            <p className="text-white text-xs font-medium leading-normal tracking-[0.015em]">Search</p>
+          </Link>
+          <Link to="/add-review" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#90cb90]">
+            <div className="text-[#90cb90] flex h-8 items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
+              </svg>
+            </div>
+            <p className="text-[#90cb90] text-xs font-medium leading-normal tracking-[0.015em]">Add</p>
+          </Link>
+          <Link to="/profile" className="flex flex-1 flex-col items-center justify-end gap-1 text-[#90cb90]">
+            <div className="text-[#90cb90] flex h-8 items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z" />
+              </svg>
+            </div>
+            <p className="text-[#90cb90] text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
+          </Link>
+        </div>
+        <div className="h-5 bg-[#183418]"></div>
+      </div>
+    </div>
   );
 }
 
