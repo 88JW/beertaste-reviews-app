@@ -1,31 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  Container, 
-  Typography, 
-  Button, 
-  Box, 
-  TextField,
-  Paper,
-  Rating,
-  Card,
-  CardMedia,
-  IconButton,
-  Grid,
-  Alert,
-  CircularProgress,
-  Slider,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Tooltip
-} from '@mui/material';
-import { 
-  ArrowBack as ArrowBackIcon,
-  PhotoCamera as PhotoCameraIcon,
-  Add as AddIcon
-} from '@mui/icons-material';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -40,26 +14,21 @@ function AddReviewPage() {
     brewery: '',
     style: '',
     tastingDate: '',
-    // Aromat
     aromaIntensity: 3,
     aromaQuality: 3,
     aromaNotesText: '',
-    // Wygląd  
     color: '',
     clarity: 3,
     foam: 3,
-    // Smak
     tasteIntensity: 3,
     tasteBalance: 3,
     bitterness: 3,
     sweetness: 3,
     acidity: 3,
     tasteNotes: '',
-    // Dodatkowe
     drinkability: 3,
     complexity: 3,
-    overallRating: 5, // 1-10 skala
-    // Meta
+    overallRating: 5,
     comments: '',
     selectedIcon: null,
     photo: null
@@ -93,7 +62,7 @@ function AddReviewPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!user) {
       setError('Musisz być zalogowany, aby dodać recenzję');
       return;
@@ -116,445 +85,354 @@ function AddReviewPage() {
       const reviewData = {
         beerName: formData.beerName.trim(),
         brewery: formData.brewery.trim(),
-        style: formData.style.trim() || 'Inne',
+        style: formData.style || 'Inne',
         tastingDate: formData.tastingDate || new Date().toISOString().split('T')[0],
-        // Aromat
         aromaIntensity: formData.aromaIntensity,
         aromaQuality: formData.aromaQuality,
         aromaNotesText: formData.aromaNotesText.trim(),
-        // Wygląd
         color: formData.color || 'Inne',
         clarity: formData.clarity,
         foam: formData.foam,
-        // Smak
         tasteIntensity: formData.tasteIntensity,
         tasteBalance: formData.tasteBalance,
         bitterness: formData.bitterness,
         sweetness: formData.sweetness,
         acidity: formData.acidity,
         tasteNotes: formData.tasteNotes.trim(),
-        // Dodatkowe
         drinkability: formData.drinkability,
         complexity: formData.complexity,
         overallRating: formData.overallRating,
-        // Meta
         comments: formData.comments.trim(),
         selectedIcon: formData.selectedIcon,
-        photoUrl: null, // TODO: Implement photo upload
+        photoUrl: null,
         userId: user.uid,
         userEmail: user.email,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
 
-      console.log('Saving review to Firebase:', reviewData);
-      
       const docRef = await addDoc(collection(db, 'reviews'), reviewData);
-      console.log('Review saved with ID:', docRef.id);
-      
-      // Navigate back to my reviews page
       navigate('/my-reviews');
     } catch (error) {
-      console.error('Error saving review:', error);
       setError('Błąd podczas zapisywania recenzji: ' + error.message);
     } finally {
       setLoading(false);
     }
   };
 
+  const beerStyles = [
+    'IPA',
+    'Pale Ale',
+    'Lager',
+    'Stout',
+    'Porter',
+    'Wheat Beer',
+    'Pilsner',
+    'Saison',
+    'Amber Ale',
+    'Barleywine',
+    'Blonde Ale',
+    'Brown Ale',
+    'Double IPA',
+    'Hefeweizen',
+    'Kolsch',
+    'Tripel',
+    'Dubbel',
+    'Gose',
+    'Bock',
+    'Schwarzbier'
+  ];
+
+  const beerColors = [
+    'Jasne',
+    'Bursztynowe',
+    'Ciemne',
+    'Czarne',
+    'Złote',
+    'Miedziane',
+    'Rubinowe',
+    'Brązowe',
+    'Słomkowe',
+    'Białe',
+    'Pomarańczowe',
+    'Czerwone',
+    'Kasztanowe',
+    'Mahoniowe',
+    'Kremowe'
+  ];
+
   return (
-    <Container maxWidth="md" sx={{ py: 2 }}>
-      <Box display="flex" alignItems="center" mb={3}>
-        <IconButton onClick={() => navigate(-1)} sx={{ mr: 1 }}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="h5" component="h1">
-          Dodaj nową recenzję piwa
-        </Typography>
-      </Box>
+    <div className="relative flex flex-col min-h-screen bg-[#102310] text-white font-sans">
+      <div className="flex items-center bg-[#102310] p-4 pb-2 justify-between">
+        <button onClick={() => navigate(-1)} className="text-white">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+            <path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"></path>
+          </svg>
+        </button>
+        <h2 className="text-lg font-bold text-center flex-1">Dodaj nową recenzję</h2>
+      </div>
 
-      <Paper elevation={3} sx={{ p: 3 }}>
-        {error && (
-          <Alert severity="error" sx={{ mb: 2 }}>
-            {error}
-          </Alert>
-        )}
-        
-        <Box component="form" onSubmit={handleSubmit}>
-          <Grid container spacing={3}>
-            {/* Basic Info */}
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Nazwa piwa"
-                name="beerName"
-                value={formData.beerName}
-                onChange={handleChange}
-                required
-                margin="normal"
-              />
-            </Grid>
-            
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Browar"
-                name="brewery"
-                value={formData.brewery}
-                onChange={handleChange}
-                required
-                margin="normal"
-              />
-            </Grid>
+      {error && <div className="bg-red-500 text-white p-2 text-center">{error}</div>}
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Styl piwa"
-                name="style"
-                value={formData.style}
-                onChange={handleChange}
-                margin="normal"
-              />
-            </Grid>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
+        <input
+          type="text"
+          name="beerName"
+          placeholder="Nazwa piwa"
+          value={formData.beerName}
+          onChange={handleChange}
+          className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
+          required
+        />
+        <input
+          type="text"
+          name="brewery"
+          placeholder="Browar"
+          value={formData.brewery}
+          onChange={handleChange}
+          className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
+          required
+        />
+        <select
+          name="style"
+          value={formData.style}
+          onChange={handleChange}
+          className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
+        >
+          <option value="">Wybierz styl piwa</option>
+          {beerStyles.map((style) => (
+            <option key={style} value={style}>
+              {style}
+            </option>
+          ))}
+        </select>
+        <input
+          type="date"
+          name="tastingDate"
+          value={formData.tastingDate}
+          onChange={handleChange}
+          className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
+        />
 
-            <Grid item xs={12} md={6}>
-              <TextField
-                fullWidth
-                label="Data degustacji"
-                name="tastingDate"
-                type="date"
-                value={formData.tastingDate}
-                onChange={handleChange}
-                margin="normal"
-                InputLabelProps={{ shrink: true }}
-              />
-            </Grid>
+        <h3 className="text-lg font-bold">Wygląd</h3>
+        <div className="flex flex-col gap-2">
+          <label>Klarowność</label>
+          <input
+            type="range"
+            name="clarity"
+            min="1"
+            max="5"
+            value={formData.clarity}
+            onChange={(e) => handleRatingChange('clarity', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label>Piana</label>
+          <input
+            type="range"
+            name="foam"
+            min="1"
+            max="5"
+            value={formData.foam}
+            onChange={(e) => handleRatingChange('foam', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <select
+          name="color"
+          value={formData.color}
+          onChange={handleChange}
+          className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
+        >
+          <option value="">Wybierz kolor piwa</option>
+          {beerColors.map((color) => (
+            <option key={color} value={color}>
+              {color}
+            </option>
+          ))}
+        </select>
 
-            {/* Aromat Section */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2, color: 'primary.main' }}>
-                Aromat
-              </Typography>
-            </Grid>
+        <h3 className="text-lg font-bold">Aromat</h3>
+        <div className="flex flex-col gap-2">
+          <label>Intensywność aromatu</label>
+          <input
+            type="range"
+            name="aromaIntensity"
+            min="1"
+            max="5"
+            value={formData.aromaIntensity}
+            onChange={(e) => handleRatingChange('aromaIntensity', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label>Jakość aromatu</label>
+          <input
+            type="range"
+            name="aromaQuality"
+            min="1"
+            max="5"
+            value={formData.aromaQuality}
+            onChange={(e) => handleRatingChange('aromaQuality', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <textarea
+          name="aromaNotesText"
+          placeholder="Nuty aromatyczne"
+          value={formData.aromaNotesText}
+          onChange={handleChange}
+          className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
+        ></textarea>
 
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" gutterBottom>Intensywność aromatu</Typography>
-              <Slider
-                name="aromaIntensity"
-                value={formData.aromaIntensity}
-                onChange={(_, value) => handleRatingChange('aromaIntensity', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
+        <h3 className="text-lg font-bold">Smak</h3>
+        <div className="flex flex-col gap-2">
+          <label>Intensywność smaku</label>
+          <input
+            type="range"
+            name="tasteIntensity"
+            min="1"
+            max="5"
+            value={formData.tasteIntensity}
+            onChange={(e) => handleRatingChange('tasteIntensity', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label>Równowaga smaku</label>
+          <input
+            type="range"
+            name="tasteBalance"
+            min="1"
+            max="5"
+            value={formData.tasteBalance}
+            onChange={(e) => handleRatingChange('tasteBalance', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label>Goryczka</label>
+          <input
+            type="range"
+            name="bitterness"
+            min="1"
+            max="5"
+            value={formData.bitterness}
+            onChange={(e) => handleRatingChange('bitterness', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label>Słodycz</label>
+          <input
+            type="range"
+            name="sweetness"
+            min="1"
+            max="5"
+            value={formData.sweetness}
+            onChange={(e) => handleRatingChange('sweetness', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label>Kwasowość</label>
+          <input
+            type="range"
+            name="acidity"
+            min="1"
+            max="5"
+            value={formData.acidity}
+            onChange={(e) => handleRatingChange('acidity', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <textarea
+          name="tasteNotes"
+          placeholder="Nuty smakowe"
+          value={formData.tasteNotes}
+          onChange={handleChange}
+          className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
+        ></textarea>
 
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" gutterBottom>Jakość aromatu</Typography>
-              <Slider
-                name="aromaQuality"
-                value={formData.aromaQuality}
-                onChange={(_, value) => handleRatingChange('aromaQuality', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
+        <h3 className="text-lg font-bold">Dodatkowe właściwości</h3>
+        <div className="flex flex-col gap-2">
+          <label>Pijalność</label>
+          <input
+            type="range"
+            name="drinkability"
+            min="1"
+            max="5"
+            value={formData.drinkability}
+            onChange={(e) => handleRatingChange('drinkability', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
+        <div className="flex flex-col gap-2">
+          <label>Złożoność</label>
+          <input
+            type="range"
+            name="complexity"
+            min="1"
+            max="5"
+            value={formData.complexity}
+            onChange={(e) => handleRatingChange('complexity', parseInt(e.target.value))}
+            className="w-full"
+          />
+        </div>
 
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Nuty aromatyczne"
-                name="aromaNotesText"
-                value={formData.aromaNotesText}
-                onChange={handleChange}
-                margin="normal"
-                placeholder="Np. owocowe, kwiatowe, chmielowe, słodowe..."
-              />
-            </Grid>
+        <h3 className="text-lg font-bold">Ogólna ocena</h3>
+        <input
+          type="range"
+          name="overallRating"
+          min="1"
+          max="10"
+          value={formData.overallRating}
+          onChange={(e) => handleRatingChange('overallRating', parseInt(e.target.value))}
+          className="w-full"
+        />
 
-            {/* Wygląd Section */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2, color: 'primary.main' }}>
-                Wygląd
-              </Typography>
-            </Grid>
+        <h3 className="text-lg font-bold">Wyrażenie emocji</h3>
+        <div className="flex gap-4">
+          {[{ value: 'heart', label: '❤️' }, { value: 'star', label: '⭐' }, { value: 'thumbUp', label: '👍' }, { value: 'thumbDown', label: '👎' }].map((icon) => (
+            <button
+              key={icon.value}
+              type="button"
+              onClick={() => handleRatingChange('selectedIcon', icon.value)}
+              className={`p-2 rounded-full ${formData.selectedIcon === icon.value ? 'bg-green-500' : 'bg-gray-500'}`}
+            >
+              {icon.label}
+            </button>
+          ))}
+        </div>
 
-            <Grid item xs={12} md={4}>
-              <FormControl fullWidth margin="normal">
-                <InputLabel>Kolor</InputLabel>
-                <Select
-                  name="color"
-                  value={formData.color}
-                  onChange={handleChange}
-                  label="Kolor"
-                >
-                  <MenuItem value="Jasne">Jasne</MenuItem>
-                  <MenuItem value="Bursztynowe">Bursztynowe</MenuItem>
-                  <MenuItem value="Ciemne">Ciemne</MenuItem>
-                  <MenuItem value="Czarne">Czarne</MenuItem>
-                  <MenuItem value="Inne">Inne</MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
+        <textarea
+          name="comments"
+          placeholder="Dodatkowe uwagi"
+          value={formData.comments}
+          onChange={handleChange}
+          className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
+        ></textarea>
 
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" gutterBottom>Klarowność</Typography>
-              <Slider
-                name="clarity"
-                value={formData.clarity}
-                onChange={(_, value) => handleRatingChange('clarity', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
+        <h3 className="text-lg font-bold">Zdjęcie piwa</h3>
+        <div className="flex flex-col items-center gap-2">
+          <input
+            type="file"
+            name="photo"
+            onChange={(e) => handleRatingChange('photo', e.target.files[0])}
+            className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
+          />
+        </div>
 
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" gutterBottom>Piana</Typography>
-              <Slider
-                name="foam"
-                value={formData.foam}
-                onChange={(_, value) => handleRatingChange('foam', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
-
-            {/* Smak Section */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2, color: 'primary.main' }}>
-                Smak
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" gutterBottom>Intensywność smaku</Typography>
-              <Slider
-                name="tasteIntensity"
-                value={formData.tasteIntensity}
-                onChange={(_, value) => handleRatingChange('tasteIntensity', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" gutterBottom>Równowaga smaku</Typography>
-              <Slider
-                name="tasteBalance"
-                value={formData.tasteBalance}
-                onChange={(_, value) => handleRatingChange('tasteBalance', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" gutterBottom>Goryczka</Typography>
-              <Slider
-                name="bitterness"
-                value={formData.bitterness}
-                onChange={(_, value) => handleRatingChange('bitterness', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" gutterBottom>Słodycz</Typography>
-              <Slider
-                name="sweetness"
-                value={formData.sweetness}
-                onChange={(_, value) => handleRatingChange('sweetness', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={4}>
-              <Typography variant="subtitle1" gutterBottom>Kwasowość</Typography>
-              <Slider
-                name="acidity"
-                value={formData.acidity}
-                onChange={(_, value) => handleRatingChange('acidity', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
-
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Nuty smakowe"
-                name="tasteNotes"
-                value={formData.tasteNotes}
-                onChange={handleChange}
-                margin="normal"
-                placeholder="Opisz smaki, które wyczuwasz..."
-              />
-            </Grid>
-
-            {/* Dodatkowe właściwości */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2, color: 'primary.main' }}>
-                Dodatkowe właściwości
-              </Typography>
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" gutterBottom>Pijalność</Typography>
-              <Slider
-                name="drinkability"
-                value={formData.drinkability}
-                onChange={(_, value) => handleRatingChange('drinkability', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
-
-            <Grid item xs={12} md={6}>
-              <Typography variant="subtitle1" gutterBottom>Złożoność</Typography>
-              <Slider
-                name="complexity"
-                value={formData.complexity}
-                onChange={(_, value) => handleRatingChange('complexity', value)}
-                step={1}
-                marks
-                min={1}
-                max={5}
-                valueLabelDisplay="auto"
-              />
-            </Grid>
-
-            {/* Ogólna ocena - skala 1-10 */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2, color: 'secondary.main' }}>
-                Ogólna ocena (1-10)
-              </Typography>
-              <Slider
-                name="overallRating"
-                value={formData.overallRating}
-                onChange={(_, value) => handleRatingChange('overallRating', value)}
-                step={1}
-                marks
-                min={1}
-                max={10}
-                valueLabelDisplay="auto"
-                sx={{ mb: 2 }}
-              />
-            </Grid>
-
-            {/* Ikony wyrażające emocje */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Wyrażenie emocji
-              </Typography>
-              <Box sx={{ display: 'flex', justifyContent: 'space-around', flexWrap: 'wrap', gap: 2 }}>
-                {[
-                  { value: 'heart', icon: '❤️', label: 'Ulubione', color: 'red' },
-                  { value: 'star', icon: '⭐', label: 'Specjalne', color: 'gold' },
-                  { value: 'thumbUp', icon: '👍', label: 'Polecam', color: 'green' },
-                  { value: 'thumbDown', icon: '👎', label: 'Nie polecam', color: 'gray' }
-                ].map(({ value, icon, label, color }) => (
-                  <Box key={value} sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                    <Tooltip title={label}>
-                      <IconButton
-                        onClick={() => handleRatingChange('selectedIcon', value)}
-                        sx={{
-                          color: formData.selectedIcon === value ? color : 'inherit',
-                          backgroundColor: formData.selectedIcon === value ? 'rgba(0,0,0,0.1)' : 'transparent'
-                        }}
-                      >
-                        {icon}
-                      </IconButton>
-                    </Tooltip>
-                    <Typography variant="caption">{label}</Typography>
-                  </Box>
-                ))}
-              </Box>
-            </Grid>
-
-            {/* Uwagi */}
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                label="Dodatkowe uwagi"
-                name="comments"
-                value={formData.comments}
-                onChange={handleChange}
-                multiline
-                rows={3}
-                margin="normal"
-                placeholder="Dodatkowe komentarze, kontekst degustacji..."
-              />
-            </Grid>
-
-            {/* Photo Section */}
-            <Grid item xs={12}>
-              <Typography variant="h6" gutterBottom sx={{ mt: 2 }}>
-                Zdjęcie piwa
-              </Typography>
-              <Card sx={{ p: 2, backgroundColor: 'grey.50' }}>
-                <Box display="flex" alignItems="center" justifyContent="center" flexDirection="column" minHeight={200}>
-                  <PhotoCameraIcon sx={{ fontSize: 64, color: 'grey.400', mb: 2 }} />
-                  <Typography variant="body2" color="text.secondary" gutterBottom>
-                    Dodaj zdjęcie piwa
-                  </Typography>
-                  <Button variant="outlined" startIcon={<PhotoCameraIcon />}>
-                    Wybierz zdjęcie
-                  </Button>
-                </Box>
-              </Card>
-            </Grid>
-
-            {/* Submit Button */}
-            <Grid item xs={12}>
-              <Box display="flex" justifyContent="center" mt={2}>
-                <Button
-                  type="submit"
-                  variant="contained"
-                  size="large"
-                  startIcon={loading ? <CircularProgress size={20} /> : <AddIcon />}
-                  disabled={loading}
-                  sx={{ minWidth: 200 }}
-                >
-                  {loading ? 'Zapisywanie...' : 'Dodaj recenzję'}
-                </Button>
-              </Box>
-            </Grid>
-          </Grid>
-        </Box>
-      </Paper>
-    </Container>
+        <button
+          type="submit"
+          className="bg-[#3df43d] text-[#102310] p-4 rounded-xl font-bold"
+          disabled={loading}
+        >
+          {loading ? 'Zapisywanie...' : 'Dodaj recenzję'}
+        </button>
+      </form>
+    </div>
   );
 }
 
