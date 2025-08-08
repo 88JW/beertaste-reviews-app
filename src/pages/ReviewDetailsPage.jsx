@@ -184,15 +184,16 @@ function ReviewDetailsPage() {
         <h2 className="text-white text-[22px] font-bold leading-tight tracking-[-0.015em] px-4 pb-3 pt-5">
           Szczegóły oceny
         </h2>
+
         <div className="p-4 grid grid-cols-2">
           {/* Aromat */}
           <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pr-2">
             <p className="text-[#90cb90] text-sm font-normal leading-normal">Intensywność aromatu</p>
-            <p className="text-white text-sm font-normal leading-normal">{review.aromaIntensity || 'N/A'}/10</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.aromaIntensity || 'N/A'}/5</p>
           </div>
           <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pl-2">
             <p className="text-[#90cb90] text-sm font-normal leading-normal">Jakość aromatu</p>
-            <p className="text-white text-sm font-normal leading-normal">{review.aromaQuality || 'N/A'}/10</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.aromaQuality || 'N/A'}/5</p>
           </div>
 
           {/* Wygląd */}
@@ -202,26 +203,26 @@ function ReviewDetailsPage() {
           </div>
           <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pl-2">
             <p className="text-[#90cb90] text-sm font-normal leading-normal">Klarowność</p>
-            <p className="text-white text-sm font-normal leading-normal">{review.clarity || 'N/A'}/10</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.clarity || 'N/A'}/5</p>
           </div>
 
           {/* Smak */}
           <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pr-2">
             <p className="text-[#90cb90] text-sm font-normal leading-normal">Równowaga smaku</p>
-            <p className="text-white text-sm font-normal leading-normal">{review.tasteBalance || 'N/A'}/10</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.tasteBalance || 'N/A'}/5</p>
           </div>
           <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pl-2">
             <p className="text-[#90cb90] text-sm font-normal leading-normal">Goryczka</p>
-            <p className="text-white text-sm font-normal leading-normal">{review.bitterness || 'N/A'}/10</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.bitterness || 'N/A'}/5</p>
           </div>
 
           <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pr-2">
             <p className="text-[#90cb90] text-sm font-normal leading-normal">Słodycz</p>
-            <p className="text-white text-sm font-normal leading-normal">{review.sweetness || 'N/A'}/10</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.sweetness || 'N/A'}/5</p>
           </div>
           <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pl-2">
             <p className="text-[#90cb90] text-sm font-normal leading-normal">Pijalność</p>
-            <p className="text-white text-sm font-normal leading-normal">{review.drinkability || 'N/A'}/10</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.drinkability || 'N/A'}/5</p>
           </div>
         </div>
 
