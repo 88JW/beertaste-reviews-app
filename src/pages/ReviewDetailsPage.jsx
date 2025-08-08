@@ -59,7 +59,7 @@ function ReviewDetailsPage() {
     const filledStars = Math.floor(rating / 2); // Convert 10-point to 5-star scale
     const hasHalfStar = (rating % 2) >= 1;
     const stars = [];
-    
+
     for (let i = 0; i < 5; i++) {
       if (i < filledStars) {
         stars.push(
@@ -126,29 +126,6 @@ function ReviewDetailsPage() {
               <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
             </svg>
           </div>
-          <div className="flex w-12 items-center justify-end">
-            <button className="flex max-w-[480px] cursor-pointer items-center justify-center overflow-hidden rounded-xl h-12 bg-transparent text-white gap-2 text-base font-bold leading-normal tracking-[0.015em] min-w-0 p-0">
-              <div className="text-white">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                  <path d="M229.66,109.66l-48,48a8,8,0,0,1-11.32-11.32L204.69,112H165a88,88,0,0,0-85.23,66,8,8,0,0,1-15.5-4A103.94,103.94,0,0,1,165,96h39.71L170.34,61.66a8,8,0,0,1,11.32-11.32l48,48A8,8,0,0,1,229.66,109.66ZM192,208H40V88a8,8,0,0,0-16,0V208a16,16,0,0,0,16,16H192a8,8,0,0,0,0-16Z"></path>
-                </svg>
-              </div>
-            </button>
-          </div>
-        </div>
-
-        {/* Beer Photo */}
-        <div className="@container">
-          <div className="@[480px]:px-4 @[480px]:py-3">
-            <div
-              className="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden bg-[#102310] @[480px]:rounded-xl min-h-80"
-              style={{
-                backgroundImage: review.photoUrl 
-                  ? `url("${review.photoUrl}")` 
-                  : `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='320' viewBox='0 0 400 320'%3E%3Crect width='400' height='320' fill='%23224922'/%3E%3Ctext x='200' y='170' text-anchor='middle' fill='%2390cb90' font-size='24' font-family='Arial'%3EBrak zdjęcia%3C/text%3E%3C/svg%3E")`
-              }}
-            ></div>
-          </div>
         </div>
 
         {/* Beer Info */}
@@ -160,6 +137,9 @@ function ReviewDetailsPage() {
         </p>
         <p className="text-[#90cb90] text-sm font-normal leading-normal pb-3 pt-1 px-4">
           Styl: {review.style}
+        </p>
+        <p className="text-[#90cb90] text-sm font-normal leading-normal pb-3 pt-1 px-4">
+          Data degustacji: {review.tastingDate || 'N/A'}
         </p>
 
         {/* Rating Section */}
@@ -174,7 +154,7 @@ function ReviewDetailsPage() {
             <div className="flex gap-0.5">
               {renderStars(review.overallRating || 0)}
             </div>
-            <p className="text-white text-base font-normal leading-normal">
+            <p className="text-white text-sm font-normal leading-normal">
               {review.createdAt ? review.createdAt.toLocaleDateString('pl-PL') : 'N/A'}
             </p>
           </div>
@@ -224,6 +204,16 @@ function ReviewDetailsPage() {
             <p className="text-[#90cb90] text-sm font-normal leading-normal">Pijalność</p>
             <p className="text-white text-sm font-normal leading-normal">{review.drinkability || 'N/A'}/5</p>
           </div>
+
+          {/* Additional Details */}
+          <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pr-2">
+            <p className="text-[#90cb90] text-sm font-normal leading-normal">Złożoność</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.complexity || 'N/A'}/5</p>
+          </div>
+          <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pl-2">
+            <p className="text-[#90cb90] text-sm font-normal leading-normal">Kwasowość</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.acidity || 'N/A'}/5</p>
+          </div>
         </div>
 
         {/* Comments */}
@@ -237,74 +227,6 @@ function ReviewDetailsPage() {
             </p>
           </div>
         )}
-
-        {/* Notes */}
-        {(review.aromaNotesText || review.tasteNotes) && (
-          <div className="px-4 pb-4">
-            <h3 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-2">
-              Notatki
-            </h3>
-            {review.aromaNotesText && (
-              <div className="mb-2">
-                <p className="text-[#90cb90] text-xs font-normal leading-normal">Aromat:</p>
-                <p className="text-white text-sm font-normal leading-normal">{review.aromaNotesText}</p>
-              </div>
-            )}
-            {review.tasteNotes && (
-              <div>
-                <p className="text-[#90cb90] text-xs font-normal leading-normal">Smak:</p>
-                <p className="text-white text-sm font-normal leading-normal">{review.tasteNotes}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Bottom Navigation */}
-      <div>
-        <div className="flex gap-2 border-t border-[#224922] bg-[#183418] px-4 pb-3 pt-2">
-          <a 
-            className="just flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-white cursor-pointer" 
-            onClick={() => navigate('/menu')}
-          >
-            <div className="text-white flex h-8 items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M224,115.55V208a16,16,0,0,1-16,16H168a16,16,0,0,1-16-16V168a8,8,0,0,0-8-8H112a8,8,0,0,0-8,8v40a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V115.55a16,16,0,0,1,5.17-11.78l80-75.48.11-.11a16,16,0,0,1,21.53,0,1.14,1.14,0,0,0,.11.11l80,75.48A16,16,0,0,1,224,115.55Z"></path>
-              </svg>
-            </div>
-          </a>
-          <a 
-            className="just flex flex-1 flex-col items-center justify-end gap-1 text-[#90cb90] cursor-pointer" 
-            onClick={() => navigate('/my-reviews')}
-          >
-            <div className="text-[#90cb90] flex h-8 items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M229.66,218.34l-50.07-50.06a88.11,88.11,0,1,0-11.31,11.31l50.06,50.07a8,8,0,0,0,11.32-11.32ZM40,112a72,72,0,1,1,72,72A72.08,72.08,0,0,1,40,112Z"></path>
-              </svg>
-            </div>
-          </a>
-          <a 
-            className="just flex flex-1 flex-col items-center justify-end gap-1 text-[#90cb90] cursor-pointer" 
-            onClick={() => navigate('/add-review')}
-          >
-            <div className="text-[#90cb90] flex h-8 items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M208,32H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32Zm0,176H48V48H208V208Zm-32-80a8,8,0,0,1-8,8H136v32a8,8,0,0,1-16,0V136H88a8,8,0,0,1,0-16h32V88a8,8,0,0,1,16,0v32h32A8,8,0,0,1,176,128Z"></path>
-              </svg>
-            </div>
-          </a>
-          <a 
-            className="just flex flex-1 flex-col items-center justify-end gap-1 text-[#90cb90] cursor-pointer" 
-            onClick={() => navigate('/profile')}
-          >
-            <div className="text-[#90cb90] flex h-8 items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
-                <path d="M230.92,212c-15.23-26.33-38.7-45.21-66.09-54.16a72,72,0,1,0-73.66,0C63.78,166.78,40.31,185.66,25.08,212a8,8,0,1,0,13.85,8c18.84-32.56,52.14-52,89.07-52s70.23,19.44,89.07,52a8,8,0,1,0,13.85-8ZM72,96a56,56,0,1,1,56,56A56.06,56.06,0,0,1,72,96Z"></path>
-              </svg>
-            </div>
-          </a>
-        </div>
-        <div className="h-5 bg-[#183418]"></div>
       </div>
     </div>
   );

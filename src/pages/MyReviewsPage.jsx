@@ -299,16 +299,16 @@ function MyReviewsPage() {
                        review.selectedIcon === 'thumbUp' ? '😊' : 
                        review.selectedIcon === 'thumbDown' ? '😞' : '🍺'}
                     </span>
-                    <span className="text-[#90cb90] text-lg font-bold">{review.overallRating || 'N/A'}/10</span>
+                    <span className="text-[#90cb90] text-lg font-bold">{review.overallRating ? `${review.overallRating}/10` : 'N/A'}</span>
                   </div>
                   <p className="text-white text-base font-bold leading-tight">{review.beerName}</p>
                   <p className="text-[#90cb90] text-sm font-normal leading-normal">
                     {review.brewery} · {review.style}
                   </p>
                   <div className="flex items-center gap-2 text-xs text-[#90cb90]">
-                    <span>Smak: {review.tasteBalance || 'N/A'}/10</span>
+                    <span>Smak: {review.tasteBalance ? `${Math.round(review.tasteBalance / 2)}/5` : 'N/A'}</span>
                     <span>•</span>
-                    <span>Aromat: {review.aromaIntensity || 'N/A'}/10</span>
+                    <span>Aromat: {review.aromaIntensity ? `${Math.round(review.aromaIntensity / 2)}/5` : 'N/A'}</span>
                   </div>
                 </div>
                 <div
