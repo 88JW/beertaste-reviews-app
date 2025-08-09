@@ -126,6 +126,12 @@ function ReviewDetailsPage() {
               <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
             </svg>
           </div>
+          <button 
+            onClick={() => navigate(`/edit-review/${id}`)}
+            className="text-white bg-[#3ef43e] px-4 py-2 rounded-lg"
+          >
+            Edytuj
+          </button>
         </div>
 
         {/* Beer Info */}
@@ -141,6 +147,22 @@ function ReviewDetailsPage() {
         <p className="text-[#90cb90] text-sm font-normal leading-normal pb-3 pt-1 px-4">
           Data degustacji: {review.tastingDate || 'N/A'}
         </p>
+
+        {/* Photo Section */}
+        {review.photoUrl && (
+          <div className="px-4 py-3">
+            <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-lg border border-[#3ef43e]">
+              <img
+                src={review.photoUrl}
+                alt="Zdjęcie piwa"
+                loading="lazy"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </div>
+        )}
+
+  {/* Usunięto prostą sekcję "Oceny" z powodu duplikacji i błędnego pola "taste" */}
 
         {/* Rating Section */}
         <div className="flex flex-wrap gap-x-8 gap-y-6 p-4">
@@ -185,6 +207,10 @@ function ReviewDetailsPage() {
             <p className="text-[#90cb90] text-sm font-normal leading-normal">Klarowność</p>
             <p className="text-white text-sm font-normal leading-normal">{review.clarity || 'N/A'}/5</p>
           </div>
+          <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pr-2">
+            <p className="text-[#90cb90] text-sm font-normal leading-normal">Piana</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.foam || 'N/A'}/5</p>
+          </div>
 
           {/* Smak */}
           <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pr-2">
@@ -194,6 +220,10 @@ function ReviewDetailsPage() {
           <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pl-2">
             <p className="text-[#90cb90] text-sm font-normal leading-normal">Goryczka</p>
             <p className="text-white text-sm font-normal leading-normal">{review.bitterness || 'N/A'}/5</p>
+          </div>
+          <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pr-2">
+            <p className="text-[#90cb90] text-sm font-normal leading-normal">Intensywność smaku</p>
+            <p className="text-white text-sm font-normal leading-normal">{review.tasteIntensity || 'N/A'}/5</p>
           </div>
 
           <div className="flex flex-col gap-1 border-t border-solid border-t-[#316831] py-4 pr-2">
@@ -215,6 +245,21 @@ function ReviewDetailsPage() {
             <p className="text-white text-sm font-normal leading-normal">{review.acidity || 'N/A'}/5</p>
           </div>
         </div>
+
+        {/* Notes Sections */}
+        {review.aromaNotesText && (
+          <div className="px-4 pb-2">
+            <h3 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-2">Nuty aromatyczne</h3>
+            <p className="text-[#90cb90] text-sm font-normal leading-normal">{review.aromaNotesText}</p>
+          </div>
+        )}
+
+        {review.tasteNotes && (
+          <div className="px-4 pb-4">
+            <h3 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-2">Nuty smakowe</h3>
+            <p className="text-[#90cb90] text-sm font-normal leading-normal">{review.tasteNotes}</p>
+          </div>
+        )}
 
         {/* Comments */}
         {review.comments && (
