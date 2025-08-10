@@ -419,6 +419,7 @@ function AddReviewPage() {
           <input
             type="file"
             name="photo"
+            accept="image/*"
             onChange={(e) => handleRatingChange('photo', e.target.files[0])}
             className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
           />
