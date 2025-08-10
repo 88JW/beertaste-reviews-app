@@ -37,4 +37,4 @@ Jest to aplikacja internetowa stworzona dla entuzjastów piwa, umożliwiająca o
     ```bash
     npm run dev
     ```
-4.  Otwórz przeglądarkę i przejdź pod adres `http://localhost:5173` (lub inny port, jeśli 5173 jest zajęty).
+
