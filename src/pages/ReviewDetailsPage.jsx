@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../firebase';
+import { FaTrash } from 'react-icons/fa';
 
 function ReviewDetailsPage() {
   const navigate = useNavigate();
@@ -9,6 +10,8 @@ function ReviewDetailsPage() {
   const [review, setReview] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchReview = async () => {
@@ -126,12 +129,22 @@ function ReviewDetailsPage() {
               <path d="M224,128a8,8,0,0,1-8,8H59.31l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L59.31,120H216A8,8,0,0,1,224,128Z"></path>
             </svg>
           </div>
-          <button 
-            onClick={() => navigate(`/edit-review/${id}`)}
-            className="text-white bg-[#3ef43e] px-4 py-2 rounded-lg"
-          >
-            Edytuj
-          </button>
+          <div className="flex gap-2">
+            <button 
+              onClick={() => navigate(`/edit-review/${id}`)}
+              className="text-white bg-[#3ef43e] px-4 py-2 rounded-lg"
+            >
+              Edytuj
+            </button>
+            <button
+              onClick={() => setShowDeleteDialog(true)}
+              className="text-white bg-red-600 px-3 py-2 rounded-lg flex items-center"
+              title="Usuń recenzję"
+              disabled={deleting}
+            >
+              <FaTrash />
+            </button>
+          </div>
         </div>
 
         {/* Beer Info */}
@@ -270,6 +283,37 @@ function ReviewDetailsPage() {
             <p className="text-[#90cb90] text-sm font-normal leading-normal">
               {review.comments}
             </p>
+          </div>
+        )}
+        {/* Dialog potwierdzenia usunięcia */}
+        {showDeleteDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50">
+            <div className="bg-[#224922] p-6 rounded-xl shadow-lg text-white max-w-sm w-full">
+              <h3 className="text-lg font-bold mb-4">Czy na pewno chcesz usunąć tę recenzję?</h3>
+              <div className="flex gap-4 justify-end">
+                <button
+                  className="bg-gray-500 px-4 py-2 rounded-lg"
+                  onClick={() => setShowDeleteDialog(false)}
+                  disabled={deleting}
+                >Anuluj</button>
+                <button
+                  className="bg-red-600 px-4 py-2 rounded-lg"
+                  onClick={async () => {
+                    setDeleting(true);
+                    try {
+                      await deleteDoc(doc(db, 'reviews', id));
+                      setShowDeleteDialog(false);
+                      navigate('/my-reviews');
+                    } catch (err) {
+                      setError('Błąd podczas usuwania recenzji: ' + err.message);
+                    } finally {
+                      setDeleting(false);
+                    }
+                  }}
+                  disabled={deleting}
+                >Usuń</button>
+              </div>
+            </div>
           </div>
         )}
       </div>
