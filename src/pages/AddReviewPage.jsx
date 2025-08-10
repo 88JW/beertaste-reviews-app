@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 function AddReviewPage() {
   const navigate = useNavigate();
@@ -33,6 +34,7 @@ function AddReviewPage() {
     selectedIcon: null,
     photo: null
   });
+  const [photoUrl, setPhotoUrl] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -58,6 +60,27 @@ function AddReviewPage() {
       ...formData,
       [field]: value
     });
+  };
+
+  const handlePhoto = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const ctx = canvas.getContext('2d');
+          canvas.width = 800;
+          canvas.height = (img.height * 800) / img.width;
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const base64String = canvas.toDataURL('image/jpeg');
+          setPhotoUrl(base64String);
+        };
+        img.src = reader.result;
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -104,7 +127,7 @@ function AddReviewPage() {
         overallRating: formData.overallRating,
         comments: formData.comments.trim(),
         selectedIcon: formData.selectedIcon,
-        photoUrl: null,
+        photoUrl: photoUrl,
         userId: user.uid,
         userEmail: user.email,
         createdAt: serverTimestamp(),
@@ -420,7 +443,7 @@ function AddReviewPage() {
             type="file"
             name="photo"
             accept="image/*"
-            onChange={(e) => handleRatingChange('photo', e.target.files[0])}
+            onChange={handlePhoto}
             className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
           />
         </div>
