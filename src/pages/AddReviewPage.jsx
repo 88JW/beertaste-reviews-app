@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { onAuthStateChanged } from 'firebase/auth';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
-import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 function AddReviewPage() {
   const navigate = useNavigate();
@@ -63,11 +62,17 @@ function AddReviewPage() {
   };
 
   const handlePhoto = (e) => {
+    // Get the selected file from the input
     const file = e.target.files[0];
+    // Check if a file was selected
     if (file) {
+      // Create a FileReader to read the file's content
       const reader = new FileReader();
+      // Define what happens when the file is successfully loaded
       reader.onload = () => {
+        // Create a new Image object
         const img = new Image();
+        // Define what happens when the image is loaded
         img.onload = () => {
           const canvas = document.createElement('canvas');
           const ctx = canvas.getContext('2d');
@@ -75,11 +80,11 @@ function AddReviewPage() {
           canvas.height = (img.height * 800) / img.width;
           ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
           const base64String = canvas.toDataURL('image/jpeg');
-          setPhotoUrl(base64String);
+          setPhotoUrl(base64String); // Update the photoUrl state with the base64 string
         };
         img.src = reader.result;
       };
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(file); // Start reading the file as a data URL
     }
   };
 
@@ -135,6 +140,34 @@ function AddReviewPage() {
       };
 
       const docRef = await addDoc(collection(db, 'reviews'), reviewData);
+      
+      // Reset form after successful submission
+      setFormData({
+        beerName: '',
+        brewery: '',
+        style: '',
+        tastingDate: '',
+        aromaIntensity: 3,
+        aromaQuality: 3,
+        aromaNotesText: '',
+        color: '',
+        clarity: 3,
+        foam: 3,
+        tasteIntensity: 3,
+        tasteBalance: 3,
+        bitterness: 3,
+        sweetness: 3,
+        acidity: 3,
+        tasteNotes: '',
+        drinkability: 3,
+        complexity: 3,
+        overallRating: 5,
+        comments: '',
+        selectedIcon: null,
+        photo: null
+      });
+      setPhotoUrl(null);
+      
       navigate('/my-reviews');
     } catch (error) {
       setError('Błąd podczas zapisywania recenzji: ' + error.message);
@@ -439,13 +472,20 @@ function AddReviewPage() {
 
         <h3 className="text-lg font-bold">Zdjęcie piwa</h3>
         <div className="flex flex-col items-center gap-2">
-          <input
-            type="file"
-            name="photo"
-            accept="image/*"
-            onChange={handlePhoto}
-            className="form-input w-full rounded-xl bg-[#224922] text-white p-4"
-          />
+          {photoUrl && (
+            <div className="mb-4">
+              <img src={photoUrl} alt="Wybrane zdjęcie" style={{ maxWidth: '250px', maxHeight: '250px' }} />
+            </div>
+          )}
+          <label className="bg-[#3df43d] text-[#102310] p-3 rounded-xl font-bold cursor-pointer">
+            Wybierz zdjęcie
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handlePhoto}
+              style={{ display: 'none' }}
+            />
+          </label>
         </div>
 
         <button
