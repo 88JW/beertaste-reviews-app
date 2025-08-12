@@ -1,8 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { collection, query, where, getDocs, orderBy, limit } from 'firebase/firestore';
+import { db } from '../firebase';
 
 function HomePage({ user, handleLogout }) {
   const navigate = useNavigate();
+  const [latestReview, setLatestReview] = useState(null);
+  const [loadingReview, setLoadingReview] = useState(true);
+
+  // Pobierz najnowszą recenzję użytkownika
+  useEffect(() => {
+    const fetchLatestReview = async () => {
+      if (!user) return;
+      
+      try {
+        setLoadingReview(true);
+        
+        // Pobierz wszystkie recenzje użytkownika i posortuj po dacie
+        const reviewsQuery = query(
+          collection(db, 'reviews'),
+          where('userId', '==', user.uid)
+        );
+
+        const querySnapshot = await getDocs(reviewsQuery);
+        const userReviews = [];
+
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          userReviews.push({
+            id: doc.id,
+            beerName: data.beerName || '',
+            brewery: data.brewery || '',
+            style: data.style || '',
+            rating: data.overallRating || data.overall || data.rating || 0,
+            photoUrl: data.photoUrl || null,
+            date: data.createdAt ? data.createdAt.toDate().toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            selectedIcon: data.selectedIcon || null,
+            createdAt: data.createdAt
+          });
+        });
+
+        // Sortuj po dacie (najnowsze pierwsze)
+        userReviews.sort((a, b) => {
+          if (!a.createdAt && !b.createdAt) return 0;
+          if (!a.createdAt) return 1;
+          if (!b.createdAt) return -1;
+          return b.createdAt.toDate() - a.createdAt.toDate();
+        });
+
+        // Ustaw najnowszą recenzję
+        if (userReviews.length > 0) {
+          setLatestReview(userReviews[0]);
+        }
+      } catch (error) {
+        console.error('Error fetching latest review:', error);
+      } finally {
+        setLoadingReview(false);
+      }
+    };
+
+    fetchLatestReview();
+  }, [user]);
 
   return (
     <div
@@ -18,6 +76,64 @@ function HomePage({ user, handleLogout }) {
             </svg>
           </div>
           <h2 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] flex-1 text-center pr-12">Menu</h2>
+        </div>
+
+        {/* Latest Review Section */}
+        <div className="px-4 py-3">
+          <h3 className="text-white text-lg font-bold leading-tight tracking-[-0.015em] pb-3">
+            Ostatnia recenzja
+          </h3>
+          
+          {loadingReview ? (
+            <div className="flex items-center justify-center p-8 rounded-lg border border-[#316831] bg-[#183418]">
+              <div className="text-[#90cb90] text-sm">Ładowanie...</div>
+            </div>
+          ) : latestReview ? (
+            <div
+              className="flex items-stretch justify-between gap-4 rounded-lg border border-[#316831] bg-[#183418] p-4 cursor-pointer hover:bg-[#1e4a1e] transition-colors"
+              onClick={() => navigate(`/review/${latestReview.id}`)}
+            >
+              <div className="flex flex-col gap-2 flex-[2_2_0px]">
+                <div className="flex items-center gap-2">
+                  <span className="text-xl" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                    {latestReview.selectedIcon === 'heart' ? '❤️' : 
+                     latestReview.selectedIcon === 'star' ? '⭐' : 
+                     latestReview.selectedIcon === 'thumbUp' ? '😊' : 
+                     latestReview.selectedIcon === 'thumbDown' ? '😞' : '🍺'}
+                  </span>
+                  <span className="text-[#90cb90] text-base font-bold">
+                    {latestReview.rating ? `${latestReview.rating}/10` : 'N/A'}
+                  </span>
+                </div>
+                <p className="text-white text-base font-bold leading-tight">{latestReview.beerName}</p>
+                <p className="text-[#90cb90] text-sm font-normal leading-normal">
+                  {latestReview.brewery} · {latestReview.style}
+                </p>
+                <p className="text-[#90cb90] text-xs opacity-75">
+                  Dodano: {latestReview.date}
+                </p>
+              </div>
+              <div
+                className="w-16 h-16 bg-center bg-no-repeat bg-cover rounded-lg shrink-0"
+                style={{ 
+                  backgroundImage: latestReview.photoUrl ? 
+                    `url("${latestReview.photoUrl}")` : 
+                    `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23224922'/%3E%3Ctext x='32' y='38' text-anchor='middle' fill='%2390cb90' font-size='8' font-family='Arial'%3E🍺%3C/text%3E%3C/svg%3E")`
+                }}
+              ></div>
+            </div>
+          ) : (
+            <div 
+              className="flex items-center justify-center p-8 rounded-lg border border-[#316831] bg-[#183418] cursor-pointer hover:bg-[#1e4a1e] transition-colors"
+              onClick={() => navigate('/add-review')}
+            >
+              <div className="text-center">
+                <div className="text-[#90cb90] text-2xl mb-2">🍺</div>
+                <p className="text-[#90cb90] text-sm">Nie masz jeszcze żadnych recenzji</p>
+                <p className="text-[#90cb90] text-xs opacity-75 mt-1">Kliknij, aby dodać pierwszą</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Features Section */}
