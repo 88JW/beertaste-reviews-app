@@ -178,6 +178,19 @@ function HomePage({ user, handleLogout }) {
             <h2 className="text-white text-base font-bold leading-tight">Add Review</h2>
           </Link>
 
+          {/* Add Simple Review Card */}
+          <Link
+            to="/add-simple-review"
+            className="flex flex-1 gap-3 rounded-lg border border-[#316831] bg-[#183418] p-4 items-center hover:bg-[#1e4a1e] transition-colors"
+          >
+            <div className="text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" fill="currentColor" viewBox="0 0 256 256">
+                <path d="M224,128a8,8,0,0,1-8,8H136v80a8,8,0,0,1-16,0V136H40a8,8,0,0,1,0-16h80V40a8,8,0,0,1,16,0v80h80A8,8,0,0,1,224,128Z" />
+              </svg>
+            </div>
+            <h2 className="text-white text-base font-bold leading-tight">Add Simple Review</h2>
+          </Link>
+
           {/* Quiz Card */}
           <Link
             to="/quiz"

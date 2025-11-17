@@ -23,6 +23,7 @@ import ReviewDetailsPage from './pages/ReviewDetailsPage';
 import EditReviewPage from './pages/EditReviewPage';
 import QuizPage from './pages/QuizPage';
 import ProfilePage from './pages/ProfilePage';
+import AddSimpleReviewPage from './pages/AddSimpleReviewPage';
 
 function App() {
   const [user, setUser] = useState(null);
@@ -74,6 +75,7 @@ function App() {
               <>
                 <Route path="/" element={<HomePage user={user} handleLogout={handleLogout} />} />
                 <Route path="/add-review" element={<AddReviewPage />} />
+                <Route path="/add-simple-review" element={<AddSimpleReviewPage />} />
                 <Route path="/my-reviews" element={<MyReviewsPage />} />
                 <Route path="/review/:id" element={<ReviewDetailsPage />} />
                 <Route path="/edit-review/:id" element={<EditReviewPage />} />
