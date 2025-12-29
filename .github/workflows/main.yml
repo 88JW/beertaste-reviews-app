@@ -1,0 +1,28 @@
+name: Deploy BeerTaste
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:  # ← RĘCZNE URUCHOMIENIE!
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+      
+      - run: npm ci && npm run build
+      
+      - name: Deploy to Server
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SECRET_SERVER_IP }}
+          port: ${{ secrets.SECRET_SSH_PORT }}
+          username: ${{ secrets.SECRET_SSH_USER }}
+          key: ${{ secrets.SECRET_SSH_KEY }}
+          source: "dist/*"
+          target: "${{ secrets.SECRET_DEPLOY_PATH }}/"
+          strip_components: 0
